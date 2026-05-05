@@ -16,18 +16,18 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
-
+    @Value("${mail.from}")
     private String fromEmail;
 
     public void sendEmail(String to, String subject, String body) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom("rsap4505@gmail.com");;
+            message.setFrom(fromEmail); // ✅ use injected value
             message.setTo(to);
             message.setSubject(subject);
             message.setText(body);
             mailSender.send(message);
-        }catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
     }
@@ -35,11 +35,13 @@ public class EmailService {
     public void sendEmailWithAttachment(String to, String subject, String body, byte[] attachment, String filename) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
-        helper.setFrom(fromEmail);
+
+        helper.setFrom(fromEmail); // ✅ now works
         helper.setTo(to);
         helper.setSubject(subject);
         helper.setText(body);
         helper.addAttachment(filename, new ByteArrayResource(attachment));
+
         mailSender.send(message);
     }
 }
