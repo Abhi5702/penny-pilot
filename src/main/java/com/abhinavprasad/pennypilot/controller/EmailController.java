@@ -2,7 +2,6 @@ package com.abhinavprasad.pennypilot.controller;
 
 import com.abhinavprasad.pennypilot.entity.ProfileEntity;
 import com.abhinavprasad.pennypilot.service.*;
-import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,11 +23,12 @@ public class EmailController {
     private final ProfileService profileService;
 
     @GetMapping("/income-excel")
-    public ResponseEntity<Void> emailIncomeExcel() throws IOException, MessagingException {
+    public ResponseEntity<Void> emailIncomeExcel() throws IOException {
         ProfileEntity profile = profileService.getCurrentProfile();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         excelService.writeIncomesToExcel(baos, incomeService.getCurrentMonthIncomesForCurrentUser());
-        emailService.sendEmailWithAttachment(profile.getEmail(),
+        emailService.sendEmailWithAttachment(
+                profile.getEmail(),
                 "Your Income Excel Report",
                 "Please find attached your income report",
                 baos.toByteArray(),
@@ -37,7 +37,7 @@ public class EmailController {
     }
 
     @GetMapping("/expense-excel")
-    public ResponseEntity<Void> emailExpenseExcel() throws IOException, MessagingException {
+    public ResponseEntity<Void> emailExpenseExcel() throws IOException {
         ProfileEntity profile = profileService.getCurrentProfile();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         excelService.writeExpensesToExcel(baos, expenseService.getCurrentMonthExpensesForCurrentUser());

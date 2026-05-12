@@ -1,48 +1,74 @@
 package com.abhinavprasad.pennypilot.service;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import java.util.Base64;
 
 @Service
 @RequiredArgsConstructor
 public class EmailService {
 
-    private final JavaMailSender mailSender;
+    @Value("${brevo.api.key}")
+    private String brevoApiKey;
 
     @Value("${mail.from}")
-    private String fromEmail;
+    private String mailFrom;
 
     public void sendEmail(String to, String subject, String body) {
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromEmail);
-            message.setTo(to);
-            message.setSubject(subject);
-            message.setText(body);
-            mailSender.send(message);
-        } catch (Exception e) {
-            // ✅ just log it, don't rethrow
-            System.err.println("Failed to send email: " + e.getMessage());
-        }
+        String payload = String.format("""
+            {
+              "sender": {"email": "%s", "name": "Penny Pilot"},
+              "to": [{"email": "%s"}],
+              "subject": "%s",
+              "textContent": "%s"
+            }
+            """, mailFrom, to, subject, body);
+
+        callBrevoApi(payload);
     }
 
-    public void sendEmailWithAttachment(String to, String subject, String body, byte[] attachment, String filename) throws MessagingException {
-        MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+    public void sendEmailWithAttachment(String to, String subject, String body, byte[] attachment, String filename) {
+        // Brevo requires attachments as base64
+        String base64Content = Base64.getEncoder().encodeToString(attachment);
 
-        helper.setFrom(fromEmail); // ✅ now works
-        helper.setTo(to);
-        helper.setSubject(subject);
-        helper.setText(body);
-        helper.addAttachment(filename, new ByteArrayResource(attachment));
+        String payload = String.format("""
+            {
+              "sender": {"email": "%s", "name": "Penny Pilot"},
+              "to": [{"email": "%s"}],
+              "subject": "%s",
+              "textContent": "%s",
+              "attachment": [
+                {
+                  "content": "%s",
+                  "name": "%s"
+                }
+              ]
+            }
+            """, mailFrom, to, subject, body, base64Content, filename);
 
-        mailSender.send(message);
+        callBrevoApi(payload);
+    }
+
+    private void callBrevoApi(String payload) {
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("api-key", brevoApiKey);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<String> request = new HttpEntity<>(payload, headers);
+
+            restTemplate.postForObject(
+                    "https://api.brevo.com/v3/smtp/email",
+                    request,
+                    String.class
+            );
+        } catch (Exception e) {
+            System.err.println("Email sending failed: " + e.getMessage());
+        }
     }
 }
