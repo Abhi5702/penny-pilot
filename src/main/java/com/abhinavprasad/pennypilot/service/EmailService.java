@@ -22,13 +22,14 @@ public class EmailService {
     public void sendEmail(String to, String subject, String body) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromEmail); // ✅ use injected value
+            message.setFrom(fromEmail);
             message.setTo(to);
             message.setSubject(subject);
             message.setText(body);
             mailSender.send(message);
         } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
+            // ✅ just log it, don't rethrow
+            System.err.println("Failed to send email: " + e.getMessage());
         }
     }
 

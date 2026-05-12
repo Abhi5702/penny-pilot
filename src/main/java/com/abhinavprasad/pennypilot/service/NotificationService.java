@@ -33,7 +33,7 @@ public class NotificationService {
         for(ProfileEntity profile : profiles) {
             String body = "Hi " + profile.getFullName() + ",<br><br>"
                     + "This is a friendly reminder to add your income and expenses for today in Penny Pilot.<br><br>"
-                    + "<a href="+frontendUrl+" style='display:inline-block;padding:10px 20px;background-color:#4CAF50;color:#fff;text-decoration:none;border-radius:5px;font-weight:bold;'>Go to Money Manager</a>"
+                    + "<a href="+frontendUrl+" style='display:inline-block;padding:10px 20px;background-color:#4CAF50;color:#fff;text-decoration:none;border-radius:5px;font-weight:bold;'>Go to Penny Pilot </a>"
                     + "<br><br>Best regards,<br> Penny Pilot Team";
             emailService.sendEmail(profile.getEmail(), "Daily reminder: Add your income and expenses", body);
         }

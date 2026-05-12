@@ -35,12 +35,19 @@ public class ProfileService {
         ProfileEntity newProfile = toEntity(profileDTO);
         newProfile.setActivationToken(UUID.randomUUID().toString());
         newProfile = profileRepository.save(newProfile);
-        //send activation email
-        String activationLink = activationURL+"/api/v1.0/activate?token=" + newProfile.getActivationToken();
-        String subject = "Activate your Money Manager account";
-        String body = "Click on the following link to activate your account: " + activationLink;
-        emailService.sendEmail(newProfile.getEmail(), subject, body);
-        return toDTO(newProfile);
+
+        // ✅ wrap email in try-catch so it doesn't crash the whole request
+        try {
+            String activationLink = activationURL + "/api/v1.0/activate?token=" + newProfile.getActivationToken();
+            String subject = "Activate your Penny Pilot  account";
+            String body = "Click on the following link to activate your account: " + activationLink;
+            emailService.sendEmail(newProfile.getEmail(), subject, body);
+        } catch (Exception e) {
+            System.err.println("Email sending failed: " + e.getMessage());
+            // user is saved, just email failed — don't crash
+        }
+
+        return toDTO(newProfile); // ✅ this will always execute now
     }
 
     public ProfileEntity toEntity(ProfileDTO profileDTO) {
