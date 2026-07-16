@@ -1,0 +1,18 @@
+name: Sync to GitLab
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to GitLab
+        run: |
+          git remote add gitlab https://Abhi5701:${{ secrets.GITLAB_TOKEN }}@gitlab.com/Abhi5701/pennypilot4433.git
+          git push gitlab main --force
